@@ -54,7 +54,6 @@
               }
           }">
 
-        <!-- ESTADO 3: ÉXITO -->
         @if(session('exito_solicitud'))
             <div class="bg-emerald-50 border-2 border-emerald-500 rounded-2xl p-8 mb-8 shadow-md">
                 <div class="flex items-center gap-4">
@@ -78,7 +77,6 @@
             </div>
         @endif
 
-        <!-- ESTADO 4: ERROR DE VALIDACIÓN -->
         @if($errors->any())
             <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded-r-xl">
                 <p class="font-bold text-red-800">Revisa los campos marcados en rojo (tus datos escritos se conservan):</p>
@@ -91,7 +89,6 @@
         @endif
 
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Formulario Principal -->
             <form method="POST" action="{{ route('cotizador.store') }}" @submit="cargando = true" class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6">
                 @csrf
                 <div>
@@ -99,7 +96,6 @@
                     <p class="text-sm text-slate-500">Ajusta los parámetros y visualiza el valor estimado en tiempo real.</p>
                 </div>
 
-                <!-- Tipo de Evento -->
                 <div>
                     <label class="block text-sm font-semibold mb-2">1. Tipo de evento *</label>
                     <select name="tipo_evento" x-model="tipoEvento" class="w-full rounded-xl border-slate-300 focus:border-amber-500 focus:ring-amber-500">
@@ -109,7 +105,6 @@
                     </select>
                 </div>
 
-                <!-- Invitados (Slider + Input sincronizados) -->
                 <div>
                     <label class="block text-sm font-semibold mb-2">2. Cantidad de invitados (20 a 1.000) *</label>
                     <div class="flex items-center gap-4">
@@ -118,7 +113,6 @@
                     </div>
                 </div>
 
-                <!-- Zona y Locación -->
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold mb-2">3. Ubicación *</label>
@@ -138,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Adicionales -->
                 <div>
                     <label class="block text-sm font-semibold mb-2">4. Servicios adicionales opcionales</label>
                     <div class="grid sm:grid-cols-3 gap-3">
@@ -154,7 +147,6 @@
                     </div>
                 </div>
 
-                <!-- Fecha y Datos de Contacto -->
                 <div class="grid sm:grid-cols-2 gap-4 pt-2 border-t">
                     <div>
                         <label class="block text-sm font-semibold mb-1">Fecha del evento *</label>
@@ -182,7 +174,6 @@
                     <textarea name="comentarios" maxlength="300" x-model="comentarios" rows="2" class="w-full rounded-xl border-slate-300"></textarea>
                 </div>
 
-                <!-- Botón con ESTADO 1 (Reposo) y ESTADO 2 (Espera / Spinner) -->
                 <button type="submit" :disabled="cargando" class="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-950 font-bold py-4 rounded-xl shadow-md transition flex justify-center items-center gap-3 text-lg">
                     <svg x-show="cargando" class="animate-spin h-5 w-5 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -192,7 +183,6 @@
                 </button>
             </form>
 
-            <!-- Tarjeta Flotante de Resumen en Vivo -->
             <aside class="bg-slate-900 text-white p-6 rounded-2xl shadow-lg h-fit sticky top-6">
                 <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Estimado en tiempo real</span>
                 <div class="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4" x-text="formatoCOP(totalEstimado) + ' COP'"></div>

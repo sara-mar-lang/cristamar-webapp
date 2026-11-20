@@ -7,7 +7,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
-    <!-- Navbar -->
     <nav class="bg-slate-950 text-white sticky top-0 z-50 border-b border-amber-500/20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-20">
             <a href="{{ route('inicio') }}" class="flex items-center space-x-2">
@@ -33,18 +32,17 @@
         <div class="bg-red-600 text-white text-center py-3 px-4 font-medium">{{ session('error') }}</div>
     @endif
 
-    <!-- Hero Section -->
     <header class="relative bg-slate-900 text-white overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-2 gap-12 items-center">
             <div>
                 <span class="inline-block bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-semibold uppercase tracking-widest px-3 py-1 rounded-full mb-4">
-                    Producción de Eventos de Alto Nivel
+                    Producción de Eventos Corporativos, Sociales y Bodas
                 </span>
                 <h1 class="text-4xl sm:text-5xl font-serif font-bold leading-tight mb-6">
                     Eventos corporativos y bodas de autor en <span class="text-amber-400">Bogotá y la Sabana</span>, con presupuesto transparente al instante.
                 </h1>
                 <p class="text-lg text-slate-300 mb-8 leading-relaxed">
-                    A diferencia de las casas de banquetes tradicionales que tardan días en cotizar, en CRISTAMAR simulas tu inversión en menos de un minuto y recibes respuesta formal en 15 minutos.
+                    Superamos el modelo tradicional de espera: mientras otras agencias tardan días en responder un formulario, en CRISTAMAR simulas tu inversión en menos de un minuto y recibes respuesta formal en 15 minutos.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="{{ route('cotizador.index') }}" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-center px-8 py-4 rounded-xl shadow-lg shadow-amber-500/20 transition text-lg">
@@ -56,30 +54,29 @@
                 </div>
             </div>
             <div class="bg-slate-800/80 border border-slate-700 p-8 rounded-2xl shadow-2xl">
-                <h2 class="text-amber-400 font-semibold uppercase tracking-wider text-sm mb-4">¿Por qué elegir CRISTAMAR?</h2>
+                <h2 class="text-amber-400 font-semibold uppercase tracking-wider text-sm mb-4">Ventaja Competitiva CRISTAMAR</h2>
                 <ul class="space-y-4 text-slate-200">
                     <li class="flex items-start gap-3">
                         <span class="text-amber-400 font-bold">✓</span>
-                        <div><strong>Transparencia desde el segundo cero:</strong> Calcula invitados, catering de autor, sonido e iluminación sin letras pequeñas.</div>
+                        <div><strong>Transparencia desde el primer segundo:</strong> Calcula invitados, catering gourmet, sonido e iluminación sin letras pequeñas.</div>
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="text-amber-400 font-bold">✓</span>
-                        <div><strong>Logística Dual Bogotá & Sabana:</strong> Cobertura propia en salones ejecutivos de Bogotá y haciendas exclusivas en Chía, Cajicá y Sopó.</div>
+                        <div><strong>Logística Dual Bogotá & Sabana:</strong> Cobertura propia en salones ejecutivos de Bogotá y haciendas en Chía, Cajicá y Sopó.</div>
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="text-amber-400 font-bold">✓</span>
-                        <div><strong>Trazabilidad Digital:</strong> Código único de cotización (CR-xxxx) y seguimiento en línea de tus solicitudes.</div>
+                        <div><strong>Trazabilidad en Línea:</strong> Código único de cotización (CR-xxxx) con historial y aprobación en tiempo real.</div>
                     </li>
                 </ul>
             </div>
         </div>
     </header>
 
-    <!-- Catálogo de Servicios -->
     <section id="servicios" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
             <h2 class="text-3xl font-serif font-bold text-slate-900">Portafolio y Tarifas Base</h2>
-            <p class="text-slate-600 mt-2">Curaduría gastronómica, montaje arquitectónico y producción audiovisual a medida.</p>
+            <p class="text-slate-600 mt-2">Planeación de eventos empresariales, bodas en la Sabana y celebraciones sociales.</p>
         </div>
         <div class="grid md:grid-cols-3 gap-8">
             @foreach($tarifas->take(3) as $tarifa)
@@ -95,12 +92,11 @@
         </div>
     </section>
 
-    <!-- Catálogo de Locaciones -->
     <section id="locaciones" class="py-16 bg-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-serif font-bold text-slate-900">Locaciones Aliadas en Bogotá y la Sabana</h2>
-                <p class="text-slate-600 mt-2">Espacios verificados para eventos desde 20 hasta 1.000 invitados.</p>
+                <h2 class="text-3xl font-serif font-bold text-slate-900">Haciendas y Salones Aliados</h2>
+                <p class="text-slate-600 mt-2">Locaciones verificadas en Bogotá y la Sabana de Cundinamarca.</p>
             </div>
             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($locaciones as $loc)
