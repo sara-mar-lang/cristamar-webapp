@@ -7,6 +7,13 @@ config:
   database: mysql:8.0
   xdebug: false
 services:
+  node:
+    type: node:20
   mailhog:
     type: mailhog
     portforward: true
+tooling:
+  npm:
+    service: node
+  node:
+    service: node
