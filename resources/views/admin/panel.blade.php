@@ -14,7 +14,6 @@
             <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded-lg">{{ $errors->first() }}</div>
         @endif
 
-        <!-- Contingencia Comercial para Administrador -->
         <div class="bg-slate-900 text-white p-5 rounded-2xl flex flex-wrap justify-between items-center gap-4">
             <div>
                 <h3 class="text-base font-bold text-amber-400">Atención Ejecutiva / Contingencia Comercial</h3>
@@ -87,7 +86,6 @@
             </form>
         </section>
 
-        <!-- 1. Gestión Exclusiva de Tarifas y Locaciones -->
         <div class="grid md:grid-cols-2 gap-8">
             <section class="bg-white p-6 rounded-xl shadow-sm border">
                 <h3 class="text-lg font-bold mb-1">Editar Tarifas Oficiales (Exclusivo Admin)</h3>
@@ -109,9 +107,9 @@
             <section class="bg-white p-6 rounded-xl shadow-sm border">
                 <h3 class="text-lg font-bold mb-1">Agregar Nueva Locación</h3>
                 <p class="text-xs text-gray-500 mb-4">Haciendas en la Sabana y salones VIP en Bogotá.</p>
-                <form method="POST" action="{{ route('admin.locaciones.store') }}" class="space-y-3 mb-6">
+                <form method="POST" action="{{ route('admin.locaciones.store') }}" autocomplete="off" class="space-y-3 mb-6">
                     @csrf
-                    <input type="text" name="nombre" placeholder="Nombre de Hacienda o Salón" required class="w-full rounded-lg border-gray-300 text-sm">
+                    <input type="text" name="nombre" autocomplete="off" placeholder="Nombre de Hacienda o Salón" required class="w-full rounded-lg border-gray-300 text-sm">
                     <div class="grid grid-cols-2 gap-2">
                         <input type="number" name="capacidad_max" placeholder="Capacidad (20-1000)" min="20" max="1000" required class="rounded-lg border-gray-300 text-sm">
                         <select name="zona" class="rounded-lg border-gray-300 text-sm">
@@ -129,13 +127,12 @@
             </section>
         </div>
 
-        <!-- 2. Equipo de Vendedoras (con métricas de gestión) y Moderación de Clientes -->
         <div class="grid md:grid-cols-2 gap-8">
             <section class="bg-white p-6 rounded-xl shadow-sm border">
                 <h3 class="text-lg font-bold mb-1">Equipo de Vendedoras / Asesoras</h3>
                 <p class="text-xs text-gray-500 mb-4">Crea cuentas comerciales, audita su gestión o elimina el perfil si renuncia.</p>
                 
-                <form method="POST" action="{{ route('admin.vendedoras.store') }}" class="grid grid-cols-2 gap-2 mb-6 bg-slate-50 p-3 rounded-lg border">
+                <form method="POST" action="{{ route('admin.vendedoras.store') }}" autocomplete="off" class="grid grid-cols-2 gap-2 mb-6 bg-slate-50 p-3 rounded-lg border">
                     @csrf
                     <input type="text" name="name" placeholder="Nombre completo" required class="rounded border-gray-300 text-xs">
                     <input type="email" name="email" placeholder="Correo corporativo" required class="rounded border-gray-300 text-xs">
@@ -192,7 +189,6 @@
             </section>
         </div>
 
-        <!-- 3. Auditoría General de Solicitudes -->
         <section class="bg-white p-6 rounded-xl shadow-sm border">
             <h3 class="text-lg font-bold mb-4">Auditoría Global de Solicitudes</h3>
             <div class="overflow-x-auto">
@@ -214,8 +210,9 @@
                                 <td class="px-3 py-3"><strong>{{ $sol->nombre }}</strong><br><span class="text-xs text-gray-500">{{ $sol->correo }}</span></td>
                                 <td class="px-3 py-3">
                                     {{ $sol->tipo_evento }} ({{ $sol->invitados }} inv.) · {{ $sol->fecha_evento }}
+                                    @if($sol->locacion)<span class="block text-xs text-slate-500">Locación: {{ $sol->locacion->nombre }}</span>@endif
                                     @if(in_array($sol->id, $conflictosIds))
-                                        <span class="block mt-1 bg-red-100 text-red-800 text-[11px] font-bold px-2 py-0.5 rounded w-fit">⚠️ Fecha ocupada en esta locación</span>
+                                        <span class="block mt-1 bg-red-100 text-red-800 text-[11px] font-bold px-2 py-0.5 rounded w-fit">⚠️ Choque de fecha en esta misma locación</span>
                                     @endif
                                 </td>
                                 <td class="px-3 py-3 font-bold">${{ number_format($sol->total_estimado, 0, ',', '.') }}</td>
@@ -225,10 +222,17 @@
                                 </td>
                                 <td class="px-3 py-3">
                                     @if($sol->estado === 'pendiente')
-                                        <form method="POST" action="{{ route('admin.aprobar', $sol) }}" class="inline">
-                                            @csrf
-                                            <button class="bg-emerald-600 text-white px-2.5 py-1 rounded text-xs font-bold">Aprobar</button>
-                                        </form>
+                                        <div class="flex flex-col gap-2">
+                                            <form method="POST" action="{{ route('admin.aprobar', $sol) }}">
+                                                @csrf
+                                                <button class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-bold">Aprobar</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.rechazar', $sol) }}" class="flex gap-1">
+                                                @csrf
+                                                <input type="text" name="motivo" placeholder="Motivo (mín. 10 car.)" required minlength="10" class="text-xs rounded border-gray-300 px-2 py-1">
+                                                <button class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">Rechazar</button>
+                                            </form>
+                                        </div>
                                     @endif
                                 </td>
                             </tr>

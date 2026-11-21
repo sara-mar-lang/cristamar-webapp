@@ -9,37 +9,59 @@
 <body class="bg-[#FAF8F5] text-slate-900 antialiased">
     @include('partials.navbar')
 
-    <main class="max-w-6xl mx-auto py-12 px-4"
-          x-data="{
-              tipoEvento: '{{ old('tipo_evento', $repetir->tipo_evento ?? 'Corporativo / BTL / Congreso') }}',
-              invitados: {{ old('invitados', $repetir->invitados ?? 100) }},
-              zona: '{{ old('zona', $repetir->zona ?? 'Sabana') }}',
-              adicionalesSeleccionados: @json(old('adicionales', $repetir ? $repetir->lineas->pluck('tarifa_id')->map(fn($id) => (string)$id)->toArray() : [])),
-              cargando: false,
-              preciosBase: {
-                  'Corporativo / BTL / Congreso': 75000,
-                  'Boda de Autor Campestre': 120000,
-                  'Fiesta Social VIP / 15 Años': 90000
-              },
-              preciosAdicionales: {
-                  @foreach($tarifas->whereNotIn('nombre', ['Corporativo / BTL / Congreso', 'Boda de Autor Campestre', 'Fiesta Social VIP / 15 Años', 'Recargo Sabana']) as $ad)
-                      '{{ $ad->id }}': { precio: {{ $ad->precio }}, tipo: '{{ $ad->tipo_cobro }}' },
-                  @endforeach
-              },
-              get totalEstimado() {
-                  let base = (this.preciosBase[this.tipoEvento] || 75000) * this.invitados;
-                  let recargo = this.zona === 'Sabana' ? (12000 * this.invitados) : 0;
-                  let extras = 0;
-                  this.adicionalesSeleccionados.forEach(id => {
-                      let item = this.preciosAdicionales[id];
-                      if (item) extras += item.tipo === 'por_persona' ? (item.precio * this.invitados) : item.precio;
-                  });
-                  return base + recargo + extras;
-              },
-              formatoCOP(val) {
-                  return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
-              }
-          }">
+    @php
+        $tipoInicial = old('tipo_evento', $repetir->tipo_evento ?? 'Corporativo / BTL / Congreso');
+        $invitadosInicial = (int) old('invitados', $repetir->invitados ?? 100);
+        $zonaInicial = old('zona', $repetir->zona ?? 'Sabana');
+        $idsRepetir = $repetir ? $repetir->lineas->pluck('tarifa_id')->map(fn($id) => (string) $id)->toArray() : [];
+        $adicionalesIniciales = old('adicionales', $idsRepetir);
+
+        $mapaAdicionales = [];
+        foreach ($tarifas as $t) {
+            if (!in_array($t->nombre, ['Corporativo / BTL / Congreso', 'Boda de Autor Campestre', 'Fiesta Social VIP / 15 Años', 'Recargo Sabana'])) {
+                $mapaAdicionales[(string) $t->id] = [
+                    'precio' => (int) $t->precio,
+                    'tipo' => $t->tipo_cobro,
+                ];
+            }
+        }
+    @endphp
+
+    <script>
+        function cotizadorApp() {
+            return {
+                tipoEvento: {!! json_encode($tipoInicial) !!},
+                invitados: {{ $invitadosInicial }},
+                zona: {!! json_encode($zonaInicial) !!},
+                adicionalesSeleccionados: {!! json_encode(array_values($adicionalesIniciales)) !!},
+                cargando: false,
+                preciosBase: {
+                    'Corporativo / BTL / Congreso': 75000,
+                    'Boda de Autor Campestre': 120000,
+                    'Fiesta Social VIP / 15 Años': 90000
+                },
+                preciosAdicionales: {!! json_encode($mapaAdicionales) !!},
+                get totalEstimado() {
+                    let cant = Number(this.invitados) || 20;
+                    let base = (this.preciosBase[this.tipoEvento] || 75000) * cant;
+                    let recargo = this.zona === 'Sabana' ? (12000 * cant) : 0;
+                    let extras = 0;
+                    this.adicionalesSeleccionados.forEach(id => {
+                        let item = this.preciosAdicionales[String(id)];
+                        if (item) {
+                            extras += item.tipo === 'por_persona' ? (item.precio * cant) : item.precio;
+                        }
+                    });
+                    return base + recargo + extras;
+                },
+                formatoCOP(val) {
+                    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+                }
+            }
+        }
+    </script>
+
+    <main class="max-w-6xl mx-auto py-12 px-4" x-data="cotizadorApp()">
 
         @if(session('exito_solicitud'))
             <div class="bg-emerald-50 border-2 border-emerald-600 rounded-2xl p-6 mb-8 shadow">
@@ -48,7 +70,7 @@
                 <div class="mt-4 flex flex-wrap gap-3">
                     <a target="_blank" href="https://wa.me/573152292638?text=Hola%20CRISTAMAR,%20acabo%20de%20generar%20la%20cotizaci%C3%B3n%20{{ session('exito_solicitud.codigo') }}%20por%20${{ session('exito_solicitud.total') }}%20COP." class="bg-emerald-600 text-white font-bold px-4 py-2 rounded-lg text-sm">Reservar Cotización vía WhatsApp</a>
                     @auth
-                        <a href="{{ route('mis.solicitudes') }}" class="bg-slate-900 text-amber-400 font-bold px-4 py-2 rounded-lg text-sm">Ver en Mis Solicitudes</a>
+                        <a href="{{ route('dashboard') }}" class="bg-slate-900 text-amber-400 font-bold px-4 py-2 rounded-lg text-sm">Ver en Mi Panel</a>
                     @endauth
                 </div>
             </div>
@@ -56,6 +78,7 @@
 
         @if($errors->any())
             <div class="bg-red-50 border-l-4 border-red-600 p-4 mb-6 rounded">
+                <p class="font-bold text-sm text-red-800 mb-1">Por favor corrige los siguientes datos:</p>
                 <ul class="list-disc list-inside text-sm text-red-700">
                     @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
                 </ul>
@@ -80,7 +103,7 @@
                     <label class="block text-sm font-bold mb-1">Cantidad Estimada de Invitados (20 a 1.000)</label>
                     <div class="flex items-center gap-4">
                         <input type="range" min="20" max="1000" x-model.number="invitados" class="w-full accent-amber-500">
-                        <input type="number" name="invitados" min="20" max="1000" x-model.number="invitados" class="w-28 rounded-xl border-slate-300 text-center font-bold">
+                        <input type="number" name="invitados" min="20" max="1000" x-model.number="invitados" required class="w-28 rounded-xl border-slate-300 text-center font-bold">
                     </div>
                 </div>
 
@@ -144,7 +167,6 @@
                 </button>
             </form>
 
-            <!-- Recibo Estimado Oficial (igual al video) -->
             <aside class="bg-white p-6 rounded-2xl border-2 border-slate-900 shadow-lg h-fit sticky top-24">
                 <div class="flex justify-between items-center border-b pb-4">
                     <div>

@@ -9,62 +9,71 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class VendedorController extends Controller {
-    public function index(Request $request) {$query = Solicitud::with(['locacion', 'lineas.tarifa'])
+    public function index(Request $request) {
+        $query = Solicitud::with(['locacion', 'lineas.tarifa'])
             ->orderByRaw("FIELD(estado, 'pendiente', 'aprobada', 'rechazada', 'cancelada')")
             ->latest();
 
-        if ($request->filled('estado')) $query->where('estado',$request->estado);
-        if ($request->filled('zona')) $query->where('zona',$request->zona);
+        if ($request->filled('estado')) $query->where('estado', $request->estado);
+        if ($request->filled('zona')) $query->where('zona', $request->zona);
 
-        $solicitudes =$query->paginate(20);
-        $tarifas = Tarifa::where('activa', true)->get();$locaciones = Locacion::all();
+        $solicitudes = $query->paginate(20);
+        $tarifas = Tarifa::where('activa', true)->get();
+        $locaciones = Locacion::all();
 
-        // Detectar conflictos: solicitudes pendientes cuya locación y fecha ya tienen otra solicitud aprobada
-        $aprobadasOcupadas = Solicitud::where('estado', 'aprobada')
-            ->whereNotNull('locacion_id')
-            ->get()
-            ->map(fn($s) => $s->locacion_id . '_' .$s->fecha_evento)
-            ->toArray();
+        // Alerta estricta: ÚNICAMENTE si tienen la misma locación específica (locacion_id) Y el mismo día (fecha_evento)
+        $conflictosIds = [];
+        foreach ($solicitudes as $s) {
+            if ($s->estado === 'pendiente' && !is_null($s->locacion_id)) {
+                $existeCruce = Solicitud::where('id', '!=', $s->id)
+                    ->where('locacion_id', $s->locacion_id)
+                    ->where('fecha_evento', $s->fecha_evento)
+                    ->whereIn('estado', ['pendiente', 'aprobada'])
+                    ->exists();
 
-        $conflictosIds =$solicitudes->filter(function ($s) use ($aprobadasOcupadas) {
-            return $s->estado === 'pendiente'
-                && $s->locacion_id
-                && in_array($s->locacion_id . '_' . $s->fecha_evento,$aprobadasOcupadas);
-        })->pluck('id')->toArray();
+                if ($existeCruce) {
+                    $conflictosIds[] = $s->id;
+                }
+            }
+        }
 
         return view('vendedor.panel', compact('solicitudes', 'tarifas', 'locaciones', 'conflictosIds'));
     }
 
-    public function crearSolicitudCliente(Request $request) {$minFecha = now()->addDays(1)->format('Y-m-d');
-        $validated =$request->validate([
-            'tipo_evento' => 'required|string',
-            'invitados' => 'required|integer|min:20|max:1000',
-            'zona' => 'required|in:Bogota,Sabana',
-            'locacion_id' => 'nullable|exists:locaciones,id',
-            'fecha_evento' => "required|date|after_or_equal:{$minFecha}",
+    public function crearSolicitudCliente(Request $request) {
+        $minFecha = now()->addDays(1)->format('Y-m-d');
+        $validated = $request->validate([
+            'tipo_evento' => ['required', 'string'],
+            'invitados' => ['required', 'integer', 'min:20', 'max:1000'],
+            'zona' => ['required', 'in:Bogota,Sabana'],
+            'locacion_id' => ['nullable', 'exists:locaciones,id'],
+            'fecha_evento' => ['required', 'date', "after_or_equal:{$minFecha}"],
             'nombre' => ['required', 'string', 'min:3', 'max:60'],
             'celular' => ['required', 'regex:/^3[0-9]{9}$/'],
-            'correo' => 'required|email|max:100',
-            'canal' => 'required|in:WhatsApp,Llamada Telefónica,Presencial',
-            'comentarios' => 'nullable|string|max:250',
-            'adicionales' => 'nullable|array',
-            'adicionales.*' => 'exists:tarifas,id',
+            'correo' => ['required', 'email', 'max:100'],
+            'canal' => ['required', 'in:WhatsApp,Llamada Telefónica,Presencial'],
+            'comentarios' => ['nullable', 'string', 'max:250'],
+            'adicionales' => ['nullable', 'array'],
+            'adicionales.*' => ['exists:tarifas,id'],
         ], [
             'celular.regex' => 'El celular del cliente debe tener 10 dígitos y empezar por 3.',
         ]);
 
-        $tarifaEvento = Tarifa::where('nombre', $validated['tipo_evento'])->firstOrFail();$total = $validated['invitados'] *$tarifaEvento->precio;
+        $tarifaEvento = Tarifa::where('nombre', $validated['tipo_evento'])->firstOrFail();
+        $total = $validated['invitados'] * $tarifaEvento->precio;
 
-        if ($validated['zona'] === 'Sabana') {$recargo = Tarifa::where('nombre', 'Recargo Sabana')->first();
-            if ($recargo)$total += $validated['invitados'] *$recargo->precio;
+        if ($validated['zona'] === 'Sabana') {
+            $recargo = Tarifa::where('nombre', 'Recargo Sabana')->first();
+            if ($recargo) $total += $validated['invitados'] * $recargo->precio;
         }
 
         $lineasParaGuardar = [];
         if (!empty($validated['adicionales'])) {
-            $adicionalesDb = Tarifa::whereIn('id',$validated['adicionales'])->get();
-            foreach ($adicionalesDb as $ad) {$cantidad = $ad->tipo_cobro === 'por_persona' ?$validated['invitados'] : 1;
+            $adicionalesDb = Tarifa::whereIn('id', $validated['adicionales'])->get();
+            foreach ($adicionalesDb as $ad) {
+                $cantidad = $ad->tipo_cobro === 'por_persona' ? $validated['invitados'] : 1;
                 $subtotal = $cantidad * $ad->precio;
-                $total +=$subtotal;
+                $total += $subtotal;
                 $lineasParaGuardar[] = [
                     'tarifa_id' => $ad->id,
                     'cantidad' => $cantidad,
@@ -73,9 +82,10 @@ class VendedorController extends Controller {
             }
         }
 
-        $clienteExistente = User::where('email',$validated['correo'])->where('rol', 'cliente')->first();
+        $clienteExistente = User::where('email', $validated['correo'])->where('rol', 'cliente')->first();
 
-        $solicitud = DB::transaction(function () use ($validated, $total,$lineasParaGuardar, $clienteExistente) {$nextId = (Solicitud::max('id') ?? 0) + 1;
+        $solicitud = DB::transaction(function () use ($validated, $total, $lineasParaGuardar, $clienteExistente) {
+            $nextId = (Solicitud::max('id') ?? 0) + 1;
             $codigo = 'CR-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
             $sol = Solicitud::create([
@@ -94,7 +104,7 @@ class VendedorController extends Controller {
                 'estado' => 'pendiente',
             ]);
 
-            foreach ($lineasParaGuardar as$linea) {
+            foreach ($lineasParaGuardar as $linea) {
                 $sol->lineas()->create($linea);
             }
 
@@ -105,16 +115,22 @@ class VendedorController extends Controller {
     }
 
     public function aprobar(Solicitud $solicitud) {
-        if ($solicitud->estado !== 'pendiente') return back();$solicitud->update([
+        if ($solicitud->estado !== 'pendiente') return back();
+        $solicitud->update([
             'estado' => 'aprobada',
             'motivo_estado' => 'Aprobada por ' . auth()->user()->name . ' (' . now()->format('d/m/Y H:i') . ')',
         ]);
         return back()->with('status', "Solicitud {$solicitud->codigo} aprobada.");
     }
 
-    public function rechazar(Request $request, Solicitud$solicitud) {
+    public function rechazar(Request $request, Solicitud $solicitud) {
         if ($solicitud->estado !== 'pendiente') return back();
-        $request->validate(['motivo' => 'required\vert{}string\vert{}min:10\vert{}max:300']);$solicitud->update([
+        $request->validate([
+            'motivo' => ['required', 'string', 'min:10', 'max:300'],
+        ], [
+            'motivo.min' => 'El motivo de rechazo debe tener al menos 10 caracteres.',
+        ]);
+        $solicitud->update([
             'estado' => 'rechazada',
             'motivo_estado' => 'Rechazada por ' . auth()->user()->name . ': ' . $request->motivo,
         ]);
