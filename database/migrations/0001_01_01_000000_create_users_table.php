@@ -10,7 +10,7 @@ return new class extends Migration {
             $table->string('name', 60);
             $table->string('email', 100)->unique();
             $table->string('celular', 10)->nullable();
-            $table->enum('rol', ['cliente', 'administrador'])->default('cliente');
+            $table->enum('rol', ['cliente', 'vendedor', 'administrador'])->default('cliente');
             $table->integer('intentos_fallidos')->default(0);
             $table->timestamp('bloqueado_hasta')->nullable();
             $table->timestamp('email_verified_at')->nullable();

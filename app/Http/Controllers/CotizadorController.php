@@ -4,15 +4,26 @@ namespace App\Http\Controllers;
 use App\Models\Tarifa;
 use App\Models\Locacion;
 use App\Models\Solicitud;
-use App\Models\LineaServicio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CotizadorController extends Controller {
     public function inicio() {
-        $locaciones = Locacion::all();
+        return view('welcome');
+    }
+
+    public function nosotros() {
+        return view('nosotros');
+    }
+
+    public function servicios() {
         $tarifas = Tarifa::where('activa', true)->get();
-        return view('welcome', compact('locaciones', 'tarifas'));
+        return view('servicios', compact('tarifas'));
+    }
+
+    public function locaciones() {
+        $locaciones = Locacion::all();
+        return view('locaciones', compact('locaciones'));
     }
 
     public function index(Request $request) {
@@ -49,15 +60,12 @@ class CotizadorController extends Controller {
             'invitados.max' => 'Ingresa entre 20 y 1.000 invitados.',
         ]);
 
-        // Recálculo estricto en el servidor (nunca confiar en el total del navegador)
         $tarifaEvento = Tarifa::where('nombre', $validated['tipo_evento'])->firstOrFail();
         $total = $validated['invitados'] * $tarifaEvento->precio;
 
         if ($validated['zona'] === 'Sabana') {
             $recargo = Tarifa::where('nombre', 'Recargo Sabana')->first();
-            if ($recargo) {
-                $total += $validated['invitados'] * $recargo->precio;
-            }
+            if ($recargo) $total += $validated['invitados'] * $recargo->precio;
         }
 
         $lineasParaGuardar = [];
@@ -105,9 +113,8 @@ class CotizadorController extends Controller {
         return redirect()->route('cotizador.index')->with('exito_solicitud', [
             'codigo' => $solicitud->codigo,
             'total' => number_format($solicitud->total_estimado, 0, ',', '.'),
-            'nombre' => $solicitud->nombre,
-            'correo' => $solicitud->correo,
-            'celular' => $solicitud->celular,
+            'evento' => $solicitud->tipo_evento,
+            'invitados' => $solicitud->invitados,
         ]);
     }
 
@@ -120,14 +127,12 @@ class CotizadorController extends Controller {
     }
 
     public function cancelar(Request $request, Solicitud $solicitud) {
-        if ($solicitud->user_id !== auth()->id() || $solicitud->estado !== 'pendiente') {
-            abort(403);
-        }
+        if ($solicitud->user_id !== auth()->id() || $solicitud->estado !== 'pendiente') abort(403);
         $request->validate(['motivo' => 'required|string|min:5|max:250']);
         $solicitud->update([
             'estado' => 'cancelada',
             'motivo_estado' => 'Cancelada por cliente: ' . $request->motivo,
         ]);
-        return back()->with('status', "Solicitud {$solicitud->codigo} cancelada correctamente.");
+        return back()->with('status', "Solicitud {$solicitud->codigo} cancelada.");
     }
 }

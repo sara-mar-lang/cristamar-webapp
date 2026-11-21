@@ -10,8 +10,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckUsuarioActivo::class,
+        ]);
         $middleware->alias([
             'admin' => \App\Http\Middleware\CheckAdmin::class,
+            'vendedor' => \App\Http\Middleware\CheckVendedor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
