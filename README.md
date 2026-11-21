@@ -1,6 +1,6 @@
-# Aplicación Web CRISTAMAR - Cotizador de Eventos (Bogotá y Sabana)
+# Aplicación Web CRISTAMAR - Producción & Cotizador de Eventos (Bogotá y Sabana)
 
-Aplicación web desarrollada en **Laravel 12** sobre **Ubuntu + Docker + Lando** para la simulación en tiempo real de presupuestos de eventos y gestión de solicitudes.
+Aplicación web desarrollada en **Laravel 12** sobre **Ubuntu + Docker + Lando** para la simulación en tiempo real de presupuestos de eventos, gestión comercial y administración de tarifas, locaciones y usuarios.
 
 ## Secuencia de arranque en Ubuntu + Lando
 1. `cp .env.example .env`
@@ -11,5 +11,6 @@ Aplicación web desarrollada en **Laravel 12** sobre **Ubuntu + Docker + Lando**
 6. `lando npm install && lando npm run build`
 
 ## Usuarios de prueba (Seeders)
-- **Rol Administrador:** `admin@cristamar.com` / `AdminCristamar2026*`
-- **Rol Cliente:** `camila@empresa.com` / `Cliente2026*`
+- **Rol Administrador:** `admin@cristamar.com` / `AdminCristamar2026*` *(Edición de tarifas, creación de locaciones, gestión/eliminación de vendedoras, veto/reactivación de clientes y auditoría global)*
+- **Rol Vendedora / Asesora VIP:** `vendedor@cristamar.com` / `Vendedor2026*` *(Registro de cotizaciones telefónicas/WhatsApp, aprobación y rechazo con motivo de solicitudes)*
+- **Rol Cliente:** `camila@empresa.com` / `Cliente2026*` *(Simulación en tiempo real, envío de solicitudes, consulta de historial, repetición y cancelación)*
